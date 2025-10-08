@@ -6,7 +6,7 @@
 /*   By: ankim <ankim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/15 13:04:18 by ankim             #+#    #+#             */
-/*   Updated: 2025/10/04 13:27:00 by ankim            ###   ########.fr       */
+/*   Updated: 2025/10/07 20:54:21 by ankim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,8 @@ int	init_table_parsing(t_table *table, int ac, char **av)
 	table->philo_nbr = ft_atoi(av[1]);
 	if (table->philo_nbr == 1)
 	{
-		printf("Error: Cannot have only one philo..\n");
+		printf("0 1 has taken a fork\n");
+		printf("0 1 has died\n");	
 		return (-1);
 	}
 	table->time_to_die = ft_atoi(av[2]);

@@ -6,7 +6,7 @@
 /*   By: ankim <ankim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 20:24:01 by ankim             #+#    #+#             */
-/*   Updated: 2025/10/04 13:24:59 by ankim            ###   ########.fr       */
+/*   Updated: 2025/10/07 18:20:50 by ankim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,4 +62,47 @@ int	param_check(int ac, char **av)
 		i++;
 	}
 	return (0);
+}
+
+void	free_me(t_table *table)
+{
+	int	i;
+
+	i = 0;
+	while (i < table->philo_nbr)
+	{
+		pthread_mutex_destroy(&table->forks[i]);
+		i++;
+	}
+	i = 0;
+	while (i < table->philo_nbr)
+	{
+		pthread_mutex_destroy(&table->philos[i].mutex);
+		i++;
+	}
+	pthread_mutex_destroy(&table->end_mutex);
+	pthread_mutex_destroy(&table->print_mutex);
+	free(table->philos);
+	free(table->forks);
+	free(table);
+}
+
+bool	check_simulation_end(t_table *table)
+{
+	bool	sim_end;
+
+	pthread_mutex_lock(&table->end_mutex);
+	sim_end = table->end_simulation;
+	pthread_mutex_unlock(&table->end_mutex);
+	return (sim_end);
+}
+
+bool	check_philo_full(t_philo *philo)
+{
+	bool	is_full;
+
+	pthread_mutex_lock(&philo->mutex);
+	is_full = philo->full;
+	pthread_mutex_unlock(&philo->mutex);
+	return (is_full);
 }

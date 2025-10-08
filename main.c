@@ -6,7 +6,7 @@
 /*   By: ankim <ankim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/14 20:23:30 by ankim             #+#    #+#             */
-/*   Updated: 2025/10/04 12:18:32 by ankim            ###   ########.fr       */
+/*   Updated: 2025/10/07 21:04:53 by ankim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,11 @@ int	create_philo_thread(t_table *table)
 		if (pthread_create(&table->philos[i].thread_id, NULL,
 				routine, &table->philos[i]) != 0)
 		{
+			while (i >= 0)
+			{
+				pthread_join(table->philos[i].thread_id, NULL);
+				i--;				
+			}
 			printf("Failed to create threads\n");
 			return (-1);
 		}
@@ -64,8 +69,9 @@ int	main(int ac, char **av)
 		return (0);
 	table = malloc(sizeof(t_table));
 	if (!table)
-		return (-1);
-	table = init_table(table, ac, av);
+		return (1);
+	if (init_table(table, ac, av) == NULL)
+		return (free(table), 1);
 	table->start_simulation = gettimems();
 	while (i < table->philo_nbr)
 	{
@@ -75,8 +81,8 @@ int	main(int ac, char **av)
 		i++;
 	}
 	if (create_philo_thread(table) != 0)
-		return (-1);
+		return (free_me(table), 1);
 	pthread_create(&table->monitor_thread, NULL, death_monitor, table);
-	clean_up(table);
-	return (0);
+	join_threads(table);
+	return (free_me(table), 0);
 }

@@ -6,7 +6,7 @@
 /*   By: ankim <ankim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/15 14:01:51 by ankim             #+#    #+#             */
-/*   Updated: 2025/06/15 16:52:49 by ankim            ###   ########.fr       */
+/*   Updated: 2025/10/07 16:14:37 by ankim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,12 @@
 
 long	gettimems(void)
 {
-	struct timeval tv;
-	long	current_ms;
+	struct timeval	tv;
+	long			current_ms;
 
 	if (gettimeofday(&tv, NULL) != 0)
 		return (-1);
-	current_ms = tv.tv_sec * 1000 + tv.tv_usec/ 1000;
+	current_ms = ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 	return (current_ms);
 }
 
@@ -29,18 +29,23 @@ long	gettimems_action(t_philo *philo)
 	long	current;
 
 	if (!philo)
-		return(-1);
+		return (-1);
 	start = philo->table->start_simulation;
 	current = gettimems() - start;
-	return(current);
+	return (current);
 }
 
 void	log_state(t_philo *philo, char *action)
 {
 	if (!philo || !philo->table)
-		return;
+		return ;
+	pthread_mutex_lock(&philo->table->end_mutex);
 	if (philo->table->end_simulation)
-		return;
+	{
+		pthread_mutex_unlock(&philo->table->end_mutex);
+		return ;
+	}
+	pthread_mutex_unlock(&philo->table->end_mutex);
 	pthread_mutex_lock(&philo->table->print_mutex);
 	printf("%ld %d %s\n", gettimems_action(philo), philo->id, action);
 	pthread_mutex_unlock(&philo->table->print_mutex);

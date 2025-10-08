@@ -6,7 +6,7 @@
 /*   By: ankim <ankim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 10:25:52 by ankim             #+#    #+#             */
-/*   Updated: 2025/10/04 12:14:44 by ankim            ###   ########.fr       */
+/*   Updated: 2025/10/07 18:19:52 by ankim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,8 @@ struct s_table
 	long			nbr_of_meals;
 	long			start_simulation;
 	bool			end_simulation;
-	pthread_mutex_t	print_mutex;
 	pthread_mutex_t	end_mutex;
+	pthread_mutex_t	print_mutex;
 	pthread_mutex_t	*forks;
 	pthread_t		monitor_thread;
 	t_philo			*philos;
@@ -68,10 +68,13 @@ void	*death_monitor(void *arg);
 int		take_forks(t_philo *philo);
 int		eat(t_philo *philo);
 int		put_forks_down(t_philo *philo);
-int		sleep_think(t_philo *philo);
+int		philo_sleep(t_philo *philo);
+int		philo_think(t_philo *philo);
 int		all_eaten(t_table *table);
 int		starved_philo(void *arg);
 void	clean_up(t_table *table);
 void	free_me(t_table *table);
+bool	check_simulation_end(t_table *table);
+bool	check_philo_full(t_philo *philo);
 
 #endif

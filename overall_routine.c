@@ -6,7 +6,7 @@
 /*   By: ankim <ankim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/15 14:08:33 by ankim             #+#    #+#             */
-/*   Updated: 2025/10/04 13:32:38 by ankim            ###   ########.fr       */
+/*   Updated: 2025/10/07 21:15:25 by ankim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ void	*death_monitor(void *arg)
 			printf("FULL!\n");
 			break ;
 		}
-		usleep(1000);
+		usleep(200);
 	}
 	return (NULL);
 }
@@ -42,13 +42,21 @@ void	*routine(void *arg)
 {
 	t_philo	*philo;
 
-	philo = (t_philo*) arg;
+	philo = (t_philo *)arg;
 	if ((philo->id) % 2 == 0)
-		usleep(1000);
-	while (!philo->table->end_simulation)
 	{
+		usleep(philo->table->time_to_eat * 1000);
+		log_state(philo, "is thinking");
+	}
+	while (1)
+	{
+		if (check_simulation_end(philo->table))
+			break ;
+		if (check_philo_full(philo))
+			break ;
 		eat(philo);
-		sleep_think(philo);
+		philo_sleep(philo);
+		philo_think(philo);
 	}
 	return (NULL);
 }
@@ -56,43 +64,40 @@ void	*routine(void *arg)
 int	all_eaten(t_table *table)
 {
 	int		i;
-	bool	is_full;
 
 	i = 0;
 	if (!table)
 		return (-1);
 	while (i < table->philo_nbr)
 	{
-		pthread_mutex_lock(&table->philos[i].mutex);
-		is_full = table->philos[i].full;
-		pthread_mutex_unlock(&table->philos[i].mutex);
-		if (!is_full)
-			return(0);
+		if (!check_philo_full(&table->philos[i]))
+			return (0);
 		i++;
 	}
 	pthread_mutex_lock(&table->end_mutex);
 	table->end_simulation = true;
 	pthread_mutex_unlock(&table->end_mutex);
-	return(1);
+	return (1);
 }
 
 int	starved_philo(void *arg)
 {
-	t_table *table;
+	t_table	*table;
 	long	time;
 	int		i;
-	bool	is_full;
 
-	i = 0;
 	table = (t_table *)arg;
-	while (!table->end_simulation && i < table->philo_nbr)
+	i = 0;
+	while (i < table->philo_nbr)
 	{
+		if (check_simulation_end(table))
+			return (0);
 		pthread_mutex_lock(&table->philos[i].mutex);
 		time = gettimems() - table->philos[i].last_meal_time;
-		is_full = table->philos[i].full;
-		if ((!is_full) && (time > table->time_to_die))
+		if ((!table->philos[i].full) && (time > table->time_to_die))
 		{
 			log_state(&table->philos[i], "died");
+			pthread_mutex_unlock(&table->philos[i].mutex);
 			pthread_mutex_lock(&table->end_mutex);
 			table->end_simulation = true;
 			pthread_mutex_unlock(&table->end_mutex);
@@ -101,44 +106,12 @@ int	starved_philo(void *arg)
 		pthread_mutex_unlock(&table->philos[i].mutex);
 		i++;
 	}
-	return(0);
+	return (0);
 }
 
 void	clean_up(t_table *table)
 {
-	int	i;
-
-	i = 0;
 	if (!table)
 		return ;
-	while (i < table->philo_nbr)
-	{
-		pthread_join(table->philos[i].thread_id, NULL);
-		i++;		
-	}
-	pthread_join(table->monitor_thread, NULL);
 	free_me(table);
-}
-
-void	free_me(t_table *table)
-{
-	int	i;
-
-	i = 0;
-	while (i < table->philo_nbr)
-	{
-		pthread_mutex_destroy(&table->forks[i]);
-		i++;
-	}
-	i = 0;
-	while (i < table->philo_nbr)
-	{
-		pthread_mutex_destroy(&table->philos[i].mutex);
-		i++;
-	}
-	pthread_mutex_destroy(&table->end_mutex);
-	pthread_mutex_destroy(&table->print_mutex);
-	free(table->philos);
-	free(table->forks);
-	free(table);
 }
